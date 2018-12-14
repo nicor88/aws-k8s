@@ -7,7 +7,7 @@ if [ -z "$AWS_DEFAULT_PROFILE" ]; then
 fi
 
 # setup
-CLUSTER_NAME="dev-data"
+CLUSTER_NAME="dev"
 ARN_USER=$(aws sts get-caller-identity --output text --query 'Arn')
 IAM_USER=$(echo $ARN_USER | cut -d "/" -f2)
 

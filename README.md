@@ -13,18 +13,20 @@ In this repository you can find multiple ways how deploy K8S based on EKS
 
 ## Deployment with Cloudformation
 
-1. Create the Master Node stack
-	<pre>
-	bash cloudformation/create_master_stack.sh
-	</pre>
+Create all needed resources running
+<pre>
+bash cloudformation/setup_all.sh
+</pre>
 
-2. Create the Master Node stack
-	<pre>
-	bash cloudformation/create_master_stack.sh
-	</pre>
+This command will setup:
+* the Master Cloudformation stack containing EKS and all the needed Network resources
+* the Worker Cloudformation stack containing an autoscaling group
+* create a kubectl config file
+* apply the node authentication to enable the EC2 machines to join K8S
 
-3. Retrieve EKS Cluster information
-	<pre>
-	aws eks describe-cluster --name dev --query cluster.endpoint
-	aws eks describe-cluster --name dev --query cluster.certificateAuthority.data
-	</pre>
+
+## Monitoring
+The folder **monitoring** includes all the needed configuration files to deploy a nice K8S Dashboard to check containers status.
+
+## Notes
+All the following resources are based on the official AWS Documentation.

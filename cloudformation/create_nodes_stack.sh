@@ -1,7 +1,7 @@
 #!/bin/sh
 set -e
 
-CLUSTER_NAME="dev-data"
+CLUSTER_NAME="dev"
 STACK_NAME="$CLUSTER_NAME-k8s-nodes"
 TEMPLATE_URL="file://nodes.yml"
 

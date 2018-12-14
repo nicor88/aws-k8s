@@ -11,6 +11,7 @@ kubectl apply -f k8s-dashboard.yml
 kubectl apply -f heapster.yml
 kubectl apply -f heapster-rbac.yml
 kubectl apply -f influxdb.yml
+# the following 2 commands are needed to give the right permission to the dashboard
 kubectl apply -f eks-admin-service-account.yml
 kubectl apply -f eks-admin-cluster-role-binding.yml
 </pre>
