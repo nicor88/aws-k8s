@@ -3,63 +3,75 @@ AWSTemplateFormatVersion: '2010-09-09'
 Description: 'Amazon EKS - Node Group'
 
 Parameters:
-  KeyName:
-    Description: The EC2 Key Pair to allow SSH access to the instances
-    Type: AWS::EC2::KeyPair::KeyName
-    Default: 'k8s_ef_data'
+  ClusterName:
+    Description: The cluster name provided when the cluster was created. If it is incorrect, nodes will not be able to join the cluster.
+    Type: String
+    Default: "dev"
 
   NodeImageId:
     Type: AWS::EC2::Image::Id
     Description: AMI id for the node instances.
-    Default: 'ami-0b2ae3c6bda8b5c06'
-    # note: accept AMI conditions here: https://aws.amazon.com/marketplace/pp/B07GRMYQR5?qid=1535534643348&sr=0-1&ref_=srh_res_product_title
+    Default: "ami-0b4eb1d8782fc3aea	"
+
+  NodeInstanceType:
+    Description: EC2 instance type for the node instances
+    Type: String
+    Default: t3.medium
 
   NodeAutoScalingGroupMinSize:
     Type: Number
     Description: Minimum size of Node Group ASG.
     Default: 1
 
-  NodeAutoScalingGroupSize:
-    Type: Number
-    Description: Size of Node Group ASG.
-    Default: 1
-
   NodeAutoScalingGroupMaxSize:
     Type: Number
-    Description: Maximum size of Node Group ASG.
+    Description: Maximum size of Node Group ASG. Set to at least 1 greater than NodeAutoScalingGroupDesiredCapacity.
     Default: 4
+
+  NodeAutoScalingGroupDesiredCapacity:
+    Type: Number
+    Description: Desired capacity of Node Group ASG.
+    Default: 2
 
   NodeVolumeSize:
     Type: Number
     Description: Node volume size
     Default: 50
 
-  ClusterName:
-    Description: The cluster name provided when the cluster was created.  If it is incorrect, nodes will not be able to join the cluster.
-    Type: String
-    Default: 'dev'
-
   BootstrapArguments:
     Description: Arguments to pass to the bootstrap script. See files/bootstrap.sh in https://github.com/awslabs/amazon-eks-ami
-    Default: ''
+    Default: ""
     Type: String
 
   NodeGroupName:
     Description: Unique identifier for the Node Group.
     Type: String
-    Default: 'group'
+    Default: "group"
 
-  NodeInstanceType:
-    Description: EC2 instance type for the node instances
-    Type: String
-    Default: t2.small
-    ConstraintDescription: must be a valid EC2 instance type
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      - Label:
+          default: "EKS Cluster"
+        Parameters:
+          - ClusterName
+      - Label:
+          default: "Worker Node Configuration"
+        Parameters:
+          - NodeGroupName
+          - NodeAutoScalingGroupMinSize
+          - NodeAutoScalingGroupDesiredCapacity
+          - NodeAutoScalingGroupMaxSize
+          - NodeInstanceType
+          - NodeImageId
+          - NodeVolumeSize
+          - BootstrapArguments
 
 Resources:
   NodeInstanceProfile:
     Type: AWS::IAM::InstanceProfile
     Properties:
-      Path: '/'
+      Path: "/"
       Roles:
       - !Ref NodeInstanceRole
 
@@ -75,32 +87,7 @@ Resources:
             - ec2.amazonaws.com
           Action:
           - sts:AssumeRole
-      Path: '/'
-      Policies:
-        - PolicyDocument:
-            Statement:
-              - Action:
-                  - ecs:*
-                Effect: Allow
-                Resource: '*'
-                Sid: ecs
-              - Action:
-                  - ecr:*
-                Effect: Allow
-                Resource: '*'
-                Sid: ecr
-              - Action:
-                  - iam:PassRole
-                Effect: Allow
-                Resource: '*'
-                Sid: iam
-              - Action:
-                  - s3:ListAllMyBuckets
-                  - s3:GetBucketLocation
-                Effect: Allow
-                Resource: '*'
-                Sid: S3ListBuckets
-          PolicyName: EksAirflowRolePolicy
+      Path: "/"
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy
         - arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy
@@ -113,10 +100,10 @@ Resources:
       VpcId:
         Fn::ImportValue: !Sub '${ClusterName}-k8s-master:VPC'
       Tags:
+      - Key: !Sub "kubernetes.io/cluster/${ClusterName}"
+        Value: 'owned'
       - Key: Name
         Value: !Sub 'k8s-${ClusterName}-nodes-sg'
-      - Key: !Sub 'kubernetes.io/cluster/${ClusterName}'
-        Value: 'owned'
 
   NodeSecurityGroupIngress:
     Type: AWS::EC2::SecurityGroupIngress
@@ -153,6 +140,30 @@ Resources:
       FromPort: 1025
       ToPort: 65535
 
+  NodeSecurityGroupFromControlPlaneOn443Ingress:
+    Type: AWS::EC2::SecurityGroupIngress
+    DependsOn: NodeSecurityGroup
+    Properties:
+      Description: Allow pods running extension API servers on port 443 to receive communication from cluster control plane
+      GroupId: !Ref NodeSecurityGroup
+      SourceSecurityGroupId:
+        Fn::ImportValue: !Sub '${ClusterName}-k8s-master:ControlPlaneSecurityGroup'
+      IpProtocol: tcp
+      FromPort: 443
+      ToPort: 443
+
+  ControlPlaneEgressToNodeSecurityGroupOn443:
+    Type: AWS::EC2::SecurityGroupEgress
+    DependsOn: NodeSecurityGroup
+    Properties:
+      Description: Allow the cluster control plane to communicate with pods running extension API servers on port 443
+      GroupId:
+        Fn::ImportValue: !Sub '${ClusterName}-k8s-master:ControlPlaneSecurityGroup'
+      DestinationSecurityGroupId: !Ref NodeSecurityGroup
+      IpProtocol: tcp
+      FromPort: 443
+      ToPort: 443
+
   ClusterControlPlaneSecurityGroupIngress:
     Type: AWS::EC2::SecurityGroupIngress
     DependsOn: NodeSecurityGroup
@@ -168,7 +179,7 @@ Resources:
   NodeGroup:
     Type: AWS::AutoScaling::AutoScalingGroup
     Properties:
-      DesiredCapacity: !Ref NodeAutoScalingGroupSize
+      DesiredCapacity: !Ref NodeAutoScalingGroupDesiredCapacity
       LaunchConfigurationName: !Ref NodeLaunchConfig
       MinSize: !Ref NodeAutoScalingGroupMinSize
       MaxSize: !Ref NodeAutoScalingGroupMaxSize
@@ -178,32 +189,32 @@ Resources:
         - Fn::ImportValue: !Sub '${ClusterName}-k8s-master:SubnetC'
       Tags:
       - Key: Name
-        Value: !Sub '${ClusterName}-${NodeGroupName}-Node'
-        PropagateAtLaunch: true
+        Value: !Sub "${ClusterName}-${NodeGroupName}-Node"
+        PropagateAtLaunch: 'true'
       - Key: !Sub 'kubernetes.io/cluster/${ClusterName}'
         Value: 'owned'
-        PropagateAtLaunch: true
+        PropagateAtLaunch: 'true'
     UpdatePolicy:
       AutoScalingRollingUpdate:
-        MinInstancesInService: '1'
         MaxBatchSize: '1'
+        MinInstancesInService: !Ref NodeAutoScalingGroupDesiredCapacity
+        PauseTime: 'PT5M'
 
   NodeLaunchConfig:
     Type: AWS::AutoScaling::LaunchConfiguration
     Properties:
-      AssociatePublicIpAddress: true
+      AssociatePublicIpAddress: 'true'
       IamInstanceProfile: !Ref NodeInstanceProfile
       ImageId: !Ref NodeImageId
       InstanceType: !Ref NodeInstanceType
-      KeyName: !Ref KeyName
       SecurityGroups:
       - !Ref NodeSecurityGroup
       BlockDeviceMappings:
-      - DeviceName: /dev/xvda
-        Ebs:
-          VolumeSize: !Ref NodeVolumeSize
-          VolumeType: gp2
-          DeleteOnTermination: true
+        - DeviceName: /dev/xvda
+          Ebs:
+            VolumeSize: !Ref NodeVolumeSize
+            VolumeType: gp2
+            DeleteOnTermination: true
       UserData:
         Fn::Base64:
           !Sub |
@@ -211,17 +222,14 @@ Resources:
             set -o xtrace
             /etc/eks/bootstrap.sh ${ClusterName} ${BootstrapArguments}
             /opt/aws/bin/cfn-signal --exit-code $? \
-            --stack  ${AWS::StackName} \
-            --resource NodeGroup  \
-            --region ${AWS::Region}
+                     --stack  ${AWS::StackName} \
+                     --resource NodeGroup  \
+                     --region ${AWS::Region}
 
 Outputs:
   NodeInstanceRole:
     Description: The node instance role
     Value: !GetAtt NodeInstanceRole.Arn
-
-  NodeAutoScalingGroup:
-    Description: The node instance Auto Scaling Group
-    Value: !Ref NodeGroup
-    Export:
-      Name: !Join [ ':', [ !Ref 'AWS::StackName', 'AutoScalingGroup' ] ]
+  NodeSecurityGroup:
+    Description: The security group for the node group
+    Value: !Ref NodeSecurityGroup

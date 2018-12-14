@@ -1,7 +1,7 @@
 #!/bin/sh
 set -e
 
-CLUSTER_NAME="dev-data"
+CLUSTER_NAME="dev"
 STACK_NAME="$CLUSTER_NAME-k8s-nodes"
 TEMPLATE_URL="file://nodes.yml"
 
@@ -13,14 +13,14 @@ fi
 echo 'Checking template validity'
 aws cloudformation validate-template --template-body $TEMPLATE_URL
 
-echo 'Template valid, creating stack'
-aws cloudformation create-stack \
+echo 'Template valid, updating stack'
+aws cloudformation update-stack \
 	--stack-name $STACK_NAME \
 	--template-body $TEMPLATE_URL \
 	--capabilities CAPABILITY_NAMED_IAM \
 	--parameters ParameterKey=ClusterName,ParameterValue=$CLUSTER_NAME
 
-echo 'Waiting until stack create completes'
-aws cloudformation wait stack-create-complete --stack-name $STACK_NAME
+echo 'Waiting until stack update completes'
+aws cloudformation wait stack-update-complete --stack-name $STACK_NAME
 
-echo 'Stack created successfully'
+echo 'Stack updated successfully'

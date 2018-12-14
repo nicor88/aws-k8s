@@ -137,6 +137,7 @@ Resources:
     Type: AWS::EKS::Cluster
     Properties:
       Name: !Ref ClusterName
+      Version: "1.11"
       RoleArn: !GetAtt EksIamRole.Arn
       ResourcesVpcConfig:
         SecurityGroupIds: [ !Ref ControlPlaneSecurityGroup ]
