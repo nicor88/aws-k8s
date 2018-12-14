@@ -14,43 +14,43 @@ IAM_USER=$(echo $ARN_USER | cut -d "/" -f2)
 echo "Creating the cluster from user $IAM_USER"
 
 # master
-#MASTER_STACK_NAME="$CLUSTER_NAME-k8s-master"
-#MASTER_TEMPLATE_URL="file://master.yml"
-#
-#echo 'Checking master template validity'
-#aws cloudformation validate-template --template-body $MASTER_TEMPLATE_URL
-#
-#echo 'Template valid, creating master stack'
-#aws cloudformation create-stack \
-#	--stack-name $MASTER_STACK_NAME \
-#	--template-body $MASTER_TEMPLATE_URL \
-#	--capabilities CAPABILITY_NAMED_IAM \
-#	--parameters ParameterKey=ClusterName,ParameterValue=$CLUSTER_NAME
-#
-#echo 'Waiting until master stack create completes'
-#aws cloudformation wait stack-create-complete --stack-name $MASTER_STACK_NAME
-#
-#echo '$MASTER_STACK_NAME created successfully'
+MASTER_STACK_NAME="$CLUSTER_NAME-k8s-master"
+MASTER_TEMPLATE_URL="file://master.yml"
+
+echo 'Checking master template validity'
+aws cloudformation validate-template --template-body $MASTER_TEMPLATE_URL
+
+echo 'Template valid, creating master stack'
+aws cloudformation create-stack \
+	--stack-name $MASTER_STACK_NAME \
+	--template-body $MASTER_TEMPLATE_URL \
+	--capabilities CAPABILITY_NAMED_IAM \
+	--parameters ParameterKey=ClusterName,ParameterValue=$CLUSTER_NAME
+
+echo 'Waiting until master stack create completes'
+aws cloudformation wait stack-create-complete --stack-name $MASTER_STACK_NAME
+
+echo '$MASTER_STACK_NAME created successfully'
 
 # nodes
 NODES_STACK_NAME="$CLUSTER_NAME-k8s-nodes"
 NODES_TEMPLATE_URL="file://nodes.yml"
 
-#echo "Checking nodes template validity"
-#aws cloudformation validate-template --template-body $NODES_TEMPLATE_URL
-#
-#echo "Template valid, creating nodes stack"
-#
-#aws cloudformation create-stack \
-#	--stack-name $NODES_STACK_NAME \
-#	--template-body $NODES_TEMPLATE_URL \
-#	--capabilities CAPABILITY_NAMED_IAM \
-#	--parameters ParameterKey=ClusterName,ParameterValue=$CLUSTER_NAME
-#
-#echo "Waiting until nodes stack create completes"
-#aws cloudformation wait stack-create-complete --stack-name $NODES_STACK_NAME
-#
-#echo "$NODES_STACK_NAME created successfully"
+echo "Checking nodes template validity"
+aws cloudformation validate-template --template-body $NODES_TEMPLATE_URL
+
+echo "Template valid, creating nodes stack"
+
+aws cloudformation create-stack \
+	--stack-name $NODES_STACK_NAME \
+	--template-body $NODES_TEMPLATE_URL \
+	--capabilities CAPABILITY_NAMED_IAM \
+	--parameters ParameterKey=ClusterName,ParameterValue=$CLUSTER_NAME
+
+echo "Waiting until nodes stack create completes"
+aws cloudformation wait stack-create-complete --stack-name $NODES_STACK_NAME
+
+echo "$NODES_STACK_NAME created successfully"
 
 EKS_ENDPOINT=$(aws eks describe-cluster --name $CLUSTER_NAME --query cluster.endpoint)
 EKS_CERTIFICATE_AUTH=$(aws eks describe-cluster --name $CLUSTER_NAME --query cluster.certificateAuthority.data)
@@ -74,7 +74,6 @@ export KUBECONFIG=$HOME/.kube/config_$CLUSTER_NAME
 
 kubectl get nodes
 
-
 ## get IAM profile for nodes
 
 ARN_INSTANCE_PROFILE_ROLE=$(aws cloudformation describe-stacks --stack-name $NODES_STACK_NAME --query 'Stacks[0].Outputs[0].OutputValue')
@@ -86,3 +85,5 @@ kubectl apply -f config/nodes_auth.yml
 kubectl get nodes
 
 rm config/nodes_auth.yml
+
+echo "Run: kubectl get nodes --watch"
