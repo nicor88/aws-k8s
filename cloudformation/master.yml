@@ -1,0 +1,186 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Amazon EKS - Master
+
+Metadata:
+  cfn-lint:
+    config:
+      ignore_checks:
+        - W3010
+
+Parameters:
+  ClusterName:
+    Type: String
+    Default: dev
+
+  RegionName:
+    Type: String
+    Default: us-east-1
+
+Resources:
+  Vpc:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 10.0.0.0/16
+      EnableDnsHostnames: true
+      EnableDnsSupport: true
+      Tags:
+        - Key: Name
+          Value: !Sub 'k8s-${ClusterName}'
+
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        - Key: Name
+          Value: !Sub 'k8s-${ClusterName}'
+
+  AttachmentGateway:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Ref Vpc
+      InternetGatewayId: !Ref InternetGateway
+
+  PublicRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref Vpc
+      Tags:
+        - Key: Name
+          Value: !Sub 'k8s-${ClusterName}'
+
+  PublicRouteViaIgtw:
+    Type: AWS::EC2::Route
+    DependsOn: AttachmentGateway
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref InternetGateway
+
+  Subnet1a:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref Vpc
+      AvailabilityZone: !Sub '${RegionName}a'
+      CidrBlock: 10.0.1.0/24
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Name
+          Value: !Sub 'k8s-${ClusterName}-${RegionName}a'
+
+  PublicSubnetARouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref Subnet1a
+      RouteTableId: !Ref PublicRouteTable
+
+  Subnet1b:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref Vpc
+      AvailabilityZone: !Sub '${RegionName}b'
+      CidrBlock: 10.0.2.0/24
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Name
+          Value: !Sub 'k8s-${ClusterName}-${RegionName}b'
+
+  PublicSubnetBRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref Subnet1b
+      RouteTableId: !Ref PublicRouteTable
+
+  Subnet1c:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref Vpc
+      AvailabilityZone: !Sub '${RegionName}c'
+      CidrBlock: 10.0.3.0/24
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Name
+          Value: !Sub 'k8s-${ClusterName}-${RegionName}c'
+
+  PublicSubnetCRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref Subnet1c
+      RouteTableId: !Ref PublicRouteTable
+
+  ControlPlaneSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Cluster communication with worker nodes
+      VpcId: !Ref Vpc
+      Tags:
+        - Key: Name
+          Value: !Sub 'k8s-${ClusterName}-control-plane-sg'
+
+  EksIamRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub 'k8s-${ClusterName}-EKSIamRole'
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action:
+              - sts:AssumeRole
+            Principal:
+              Service:
+                - eks.amazonaws.com
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonEKSClusterPolicy
+        - arn:aws:iam::aws:policy/AmazonEKSServicePolicy
+
+  EksCluster:
+    Type: AWS::EKS::Cluster
+    Properties:
+      Name: !Ref ClusterName
+      RoleArn: !GetAtt EksIamRole.Arn
+      ResourcesVpcConfig:
+        SecurityGroupIds: [ !Ref ControlPlaneSecurityGroup ]
+        SubnetIds: [!Ref Subnet1a, !Ref Subnet1b, !Ref Subnet1c]
+
+Outputs:
+  VPC:
+    Description: VPC
+    Value: !Ref Vpc
+    Export:
+      Name: !Join [ ':', [ !Ref 'AWS::StackName', 'VPC' ] ]
+
+  Subnet1a:
+    Description: Subnet in AZ a
+    Value: !Ref Subnet1b
+    Export:
+      Name: !Join [ ':', [ !Ref 'AWS::StackName', 'SubnetA' ] ]
+
+  Subnet1b:
+    Description: Subnet in AZ b
+    Value: !Ref Subnet1b
+    Export:
+      Name: !Join [ ':', [ !Ref 'AWS::StackName', 'SubnetB' ] ]
+
+  Subnet1c:
+    Description: Subnet in AZ c
+    Value: !Ref Subnet1c
+    Export:
+      Name: !Join [ ':', [ !Ref 'AWS::StackName', 'SubnetC' ] ]
+
+  ControlPlaneSecurityGroup:
+    Description: Control Plane Security Group
+    Value: !Ref ControlPlaneSecurityGroup
+    Export:
+      Name: !Join [ ':', [ !Ref 'AWS::StackName', 'ControlPlaneSecurityGroup' ] ]
+
+  EksCluster:
+    Description: EKS Cluster
+    Value: !Ref EksCluster
+    Export:
+      Name: !Join [ ':', [ !Ref 'AWS::StackName', 'EksCluster' ] ]
+
+  EksClusterEndpoint:
+    Description: EKS Cluster endpoint
+    Value: !GetAtt EksCluster.Endpoint
+    Export:
+      Name: !Join [ ':', [ !Ref 'AWS::StackName', 'EksClusterEndpoint' ] ]
