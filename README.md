@@ -15,7 +15,8 @@ In this repository you can find multiple ways how deploy K8S based on EKS
 
 Create all needed resources running
 <pre>
-bash cloudformation/setup_all.sh
+cd cloudformation
+bash setup_all.sh
 </pre>
 
 This command will setup:
