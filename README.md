@@ -25,6 +25,13 @@ This command will setup:
 * create a kubectl config file
 * apply the node authentication to enable the EC2 machines to join K8S
 
+### Note
+To give access to the new cluster to other user, you can create AWS IAM user then remember to run:
+<pre>
+kubectl apply -f config/user_permission.dist.yml
+</pre>
+Before running the command above, remember to replace `AWS_ACCOUNT_ID` and `AWS_ACCOUNT_ID`
+
 
 ## Monitoring
 The folder **monitoring** includes all the needed configuration files to deploy a nice K8S Dashboard to check containers status.
