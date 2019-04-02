@@ -3,7 +3,7 @@ variable "aws_region" {
 }
 
 variable "project" {
-    default = "k8s"
+    default = "nicor88"
 }
 
 variable "stage" {

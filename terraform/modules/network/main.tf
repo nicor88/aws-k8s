@@ -5,7 +5,7 @@ resource "aws_vpc" "this" {
   enable_dns_hostnames  = "true"
 
   tags = {
-    Name = "${var.project}-${var.stage}-vpc"
+    Name = "${var.project}-${var.stage}-k8s-vpc"
   }
 }
 
@@ -13,7 +13,7 @@ resource "aws_internet_gateway" "this" {
   vpc_id = "${aws_vpc.this.id}"
 
   tags = {
-    Name = "${var.project}-${var.stage}-igw"
+    Name = "${var.project}-${var.stage}-k8s-igw"
   }
 }
 
@@ -26,7 +26,7 @@ resource "aws_route_table" "public" {
   }
 
   tags = {
-    Name = "${var.project}-${var.stage}-public-route"
+    Name = "${var.project}-${var.stage}-k8s-public-route"
   }
 }
 
@@ -37,7 +37,7 @@ resource "aws_subnet" "public" {
   count             = "${length(split(",", var.public_subnets))}"
 
   tags {
-    Name = "${var.project}-${var.stage}-public-${element(split(",", var.availability_zones), count.index)}"
+    Name = "${var.project}-${var.stage}-k8s-public-${element(split(",", var.availability_zones), count.index)}"
   }
 
   map_public_ip_on_launch = true
@@ -53,7 +53,7 @@ resource "aws_eip" "this" {
     vpc = true
 
     tags = {
-        Name = "${var.project}-${var.stage}-elastic-ip"
+        Name = "${var.project}-${var.stage}-k8s-elastic-ip"
     }
 }
 
@@ -62,7 +62,7 @@ resource "aws_nat_gateway" "this" {
     subnet_id     = "${aws_subnet.public.0.id}"
 
     tags = {
-        Name = "${var.project}-${var.stage}-nat-gtw"
+        Name = "${var.project}-${var.stage}-k8s-nat-gtw"
     }
 }
 
@@ -70,7 +70,7 @@ resource "aws_route_table" "private" {
   vpc_id = "${aws_vpc.this.id}"
 
   tags {
-    Name = "${var.project}-${var.stage}-private-route"
+    Name = "${var.project}-${var.stage}-k8s-private-route"
   }
 }
 
@@ -89,7 +89,7 @@ resource "aws_subnet" "private" {
   count             = "${length(split(",", var.private_subnets))}"
 
   tags {
-    Name = "${var.project}-${var.stage}-private-${element(split(",", var.availability_zones), count.index)}"
+    Name = "${var.project}-${var.stage}-k8s-private-${element(split(",", var.availability_zones), count.index)}"
   }
 }
 

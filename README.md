@@ -38,3 +38,13 @@ The folder **monitoring** includes all the needed configuration files to deploy 
 
 ## Notes
 All the following resources are based on the official AWS Documentation.
+
+## Deployment with Terraform
+
+<pre>
+export AWS_PROFILE=your_profile
+cd terraform
+make init
+make plan
+make apply
+</pre>
