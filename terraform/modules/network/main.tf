@@ -1,8 +1,8 @@
 resource "aws_vpc" "this" {
-  cidr_block       = "${var.vpc_cidr_block}"
+  cidr_block = "${var.vpc_cidr_block}"
 
-  enable_dns_support = "true"
-  enable_dns_hostnames  = "true"
+  enable_dns_support   = "true"
+  enable_dns_hostnames = "true"
 
   tags = {
     Name = "${var.project}-${var.stage}-k8s-vpc"
@@ -50,20 +50,20 @@ resource "aws_route_table_association" "public" {
 }
 
 resource "aws_eip" "this" {
-    vpc = true
+  vpc = true
 
-    tags = {
-        Name = "${var.project}-${var.stage}-k8s-elastic-ip"
-    }
+  tags = {
+    Name = "${var.project}-${var.stage}-k8s-elastic-ip"
+  }
 }
 
 resource "aws_nat_gateway" "this" {
-    allocation_id = "${aws_eip.this.id}"
-    subnet_id     = "${aws_subnet.public.0.id}"
+  allocation_id = "${aws_eip.this.id}"
+  subnet_id     = "${aws_subnet.public.0.id}"
 
-    tags = {
-        Name = "${var.project}-${var.stage}-k8s-nat-gtw"
-    }
+  tags = {
+    Name = "${var.project}-${var.stage}-k8s-nat-gtw"
+  }
 }
 
 resource "aws_route_table" "private" {
