@@ -17,7 +17,7 @@ module "eks-cluster" {
   stage   = "${var.stage}"
 
   vpc_id     = "${module.network.vpc_id}"
-  subnet_ids = "${split(",", module.network.public_subnet_ids)}"
+  subnet_ids = "${split(",", module.network.public_subnet_ids)}" # TODO maybe consider to add also the private subnets
 
   additional_security_groups = []
   additional_cidr_blocks     = ["0.0.0.0/0"]
