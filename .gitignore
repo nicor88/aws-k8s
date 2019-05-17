@@ -1,3 +1,4 @@
 .idea/
 .eks/
 terraform/.terraform
+config_map.yml
