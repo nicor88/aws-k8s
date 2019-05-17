@@ -50,17 +50,6 @@ resource "aws_security_group_rule" "egress" {
   type              = "egress"
 }
 
-# resource "aws_security_group_rule" "workers_sgs" {
-#     count                    = "${length(var.workers_security_group_ids) > 0 ? length(var.workers_security_group_ids) : 0}"
-#     description              = "Allow the cluster to receive communication from the worker nodes"
-#     from_port                = 0
-#     to_port                  = 65535
-#     protocol                 = "-1"
-#     source_security_group_id = "${element(var.workers_security_group_ids, count.index)}"
-#     security_group_id        = "${aws_security_group.this.id}"
-#     type                     = "ingress"
-# }
-
 resource "aws_security_group_rule" "additional_sgs" {
   count                    = "${length(var.additional_security_groups) > 0 ? length(var.additional_security_groups) : 0}"
   description              = "Allow additional security groups to communicate with the cluster"
