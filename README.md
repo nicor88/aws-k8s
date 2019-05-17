@@ -33,12 +33,6 @@ kubectl apply -f config/user_permission.dist.yml
 Before running the command above, remember to replace `AWS_ACCOUNT_ID` and `AWS_ACCOUNT_ID`
 
 
-## Monitoring
-The folder **monitoring** includes all the needed configuration files to deploy a nice K8S Dashboard to check containers status.
-
-## Notes
-All the following resources are based on the official AWS Documentation.
-
 ## Deployment with Terraform
 
 <pre>
@@ -48,3 +42,19 @@ make init
 make plan
 make apply
 </pre>
+
+
+## Setup Local config
+* Install [awscli](https://docs.aws.amazon.com/cli/latest/userguide/install-macos.html)
+* Run the following command:
+<pre>
+export AWS_PROFILE=your_profile
+aws eks update-kubeconfig --name nicor88-dev-k8s-cluster --kubeconfig ~/.kube/config_nicor88
+export KUBECONFIG=~/.kube/config_nicor88
+</pre>
+
+## Monitoring
+The folder **monitoring** includes all the needed configuration files to deploy a nice K8S Dashboard to check containers status.
+
+## Notes
+All the following resources are based on the official AWS Documentation.

@@ -20,10 +20,13 @@ apply:
 		-input=false \
 		-refresh=true
 
-destroy:
+destroy-module:
 	@terraform destroy --target module.$(MODULE) \
 		-input=false \
 		-refresh=true
+
+destroy:
+	@terraform destroy
 
 output:
 	@terraform output -module=$(MODULE)

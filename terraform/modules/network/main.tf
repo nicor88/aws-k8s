@@ -4,17 +4,26 @@ resource "aws_vpc" "this" {
   enable_dns_support   = "true"
   enable_dns_hostnames = "true"
 
-  tags = {
-    Name = "${var.project}-${var.stage}-k8s-vpc"
-  }
+  tags = "${
+    map(
+     "Project", "${var.project}",
+     "Stage", "${var.stage}",
+     "Name", "${var.project}-${var.stage}-k8s-vpc",
+     "kubernetes.io/cluster/${var.eks_cluster_name}", "shared"
+    )
+  }"
 }
 
 resource "aws_internet_gateway" "this" {
   vpc_id = "${aws_vpc.this.id}"
 
-  tags = {
-    Name = "${var.project}-${var.stage}-k8s-igw"
-  }
+  tags = "${
+    map(
+     "Project", "${var.project}",
+     "Stage", "${var.stage}",
+     "Name", "${var.project}-${var.stage}-k8s-igw"
+    )
+  }"
 }
 
 resource "aws_route_table" "public" {
@@ -25,9 +34,14 @@ resource "aws_route_table" "public" {
     gateway_id = "${aws_internet_gateway.this.id}"
   }
 
-  tags = {
-    Name = "${var.project}-${var.stage}-k8s-public-route"
-  }
+  tags = "${
+    map(
+     "Project", "${var.project}",
+     "Stage", "${var.stage}",
+     "Name", "${var.project}-${var.stage}-k8s-public-route",
+     "kubernetes.io/cluster/${var.eks_cluster_name}", "shared"
+    )
+  }"
 }
 
 resource "aws_subnet" "public" {
@@ -36,9 +50,14 @@ resource "aws_subnet" "public" {
   availability_zone = "${element(split(",", var.availability_zones), count.index)}"
   count             = "${length(split(",", var.public_subnets))}"
 
-  tags {
-    Name = "${var.project}-${var.stage}-k8s-public-${element(split(",", var.availability_zones), count.index)}"
-  }
+  tags = "${
+    map(
+     "Project", "${var.project}",
+     "Stage", "${var.stage}",
+     "Name", "${var.project}-${var.stage}-k8s-public-${element(split(",", var.availability_zones), count.index)}",
+     "kubernetes.io/cluster/${var.eks_cluster_name}", "shared"
+    )
+  }"
 
   map_public_ip_on_launch = true
 }
@@ -88,9 +107,14 @@ resource "aws_subnet" "private" {
   availability_zone = "${element(split(",", var.availability_zones), count.index)}"
   count             = "${length(split(",", var.private_subnets))}"
 
-  tags {
-    Name = "${var.project}-${var.stage}-k8s-private-${element(split(",", var.availability_zones), count.index)}"
-  }
+  tags = "${
+    map(
+     "Project", "${var.project}",
+     "Stage", "${var.stage}",
+     "Name", "${var.project}-${var.stage}-k8s-private-${element(split(",", var.availability_zones), count.index)}",
+     "kubernetes.io/cluster/${var.eks_cluster_name}", "shared"
+    )
+  }"
 }
 
 resource "aws_route_table_association" "private" {
