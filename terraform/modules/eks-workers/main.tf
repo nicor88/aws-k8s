@@ -128,7 +128,7 @@ data "template_file" "userdata" {
 }
 
 resource "aws_launch_template" "this" {
-  name_prefix                          = "${local.eks_workers}"
+  name                                 = "${local.eks_workers}"
   block_device_mappings                = ["${var.block_device_mappings}"]
   credit_specification                 = ["${var.credit_specification}"]
   disable_api_termination              = "${var.disable_api_termination}"
@@ -141,6 +141,16 @@ resource "aws_launch_template" "this" {
   key_name                             = "${var.key_name}"
   placement                            = ["${var.placement}"]
   user_data                            = "${base64encode(join("", data.template_file.userdata.*.rendered))}"
+
+  block_device_mappings {
+    device_name = "${var.ebs_device_name}"
+
+    ebs {
+      volume_size = "${var.ebs_size_gb}"
+      delete_on_termination = true
+      volume_type = "${var.ebs_type}"
+    }
+  }
 
   iam_instance_profile {
     name = "${aws_iam_instance_profile.this.name}"
@@ -200,7 +210,7 @@ resource "aws_launch_template" "this" {
 }
 
 resource "aws_autoscaling_group" "this" {
-  name_prefix               = "${local.eks_workers}"
+  name                      = "${local.eks_workers}"
   vpc_zone_identifier       = ["${var.subnet_ids}"]
   max_size                  = "${var.max_size}"
   min_size                  = "${var.min_size}"

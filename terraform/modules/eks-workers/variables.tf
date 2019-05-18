@@ -77,7 +77,22 @@ variable "elastic_gpu_specifications" {
 
 variable "ebs_optimized" {
   description = "If true, the launched EC2 instance will be EBS-optimized"
-  default     = false
+  default     = true
+}
+
+variable "ebs_size_gb" {
+  description = "size in GB of EBS volume"
+  default = 20
+}
+
+variable "ebs_device_name" {
+  description = "EBS mounting point name"
+  default = "/dev/xvda"
+}
+
+variable "ebs_type" {
+  description = "EBS type"
+  default = "standard"
 }
 
 variable "disable_api_termination" {

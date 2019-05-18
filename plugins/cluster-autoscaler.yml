@@ -135,7 +135,7 @@ spec:
             - --stderrthreshold=info
             - --cloud-provider=aws
             - --skip-nodes-with-local-storage=false
-            - --nodes=1:4:nicor88-dev-default-k8s-workers20190517135954143100000009 # note that 1 is the minimum nodes of the ASG and 4 is the max nodes
+            - --nodes=1:4:nicor88-dev-default-k8s-workers # note that 1 is the minimum nodes of the ASG and 4 is the max nodes
           env:
             - name: AWS_REGION
               value: eu-west-1

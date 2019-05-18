@@ -43,6 +43,15 @@ make plan
 make apply
 </pre>
 
+After the deployment is done, you need to apply the `k8s/config_map.dist.yml`.
+Run the following:
+<pre>
+cp k8s/config_map.dist.yml k8s/config_map.yml
+</pre>
+
+Be sure to replace `REPLACE_WITH_ARN_INSTANCE_PROFILE_ROLE` with the right role ARN.
+Before applying the following yml file to the cluster, be sure to have `kubectl` installed and configured to the just created cluster.
+
 
 ## Setup Local config
 * Install [awscli](https://docs.aws.amazon.com/cli/latest/userguide/install-macos.html)
@@ -53,8 +62,11 @@ aws eks update-kubeconfig --name nicor88-dev-k8s-cluster --kubeconfig ~/.kube/co
 export KUBECONFIG=~/.kube/config_nicor88
 </pre>
 
-## Monitoring
+## Plugins
 The folder **monitoring** includes all the needed configuration files to deploy a nice K8S Dashboard to check containers status.
+<pre>
+kube apply -f plugins/monitoring/ --recursive
+</pre>
 
 ## Notes
 All the following resources are based on the official AWS Documentation.
