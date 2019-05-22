@@ -88,6 +88,18 @@ data "aws_iam_policy_document" "workers_default_iam_policy_extension" {
       "${module.eks_workers_default.autoscaling_group_arn}",
     ]
   }
+
+  statement {
+    effect = "Allow"
+
+    actions = [
+      "ec2:DescribeAccountAttributes",
+    ]
+
+    resources = [
+      "*",
+    ]
+  }
 }
 
 resource "aws_iam_role_policy" "workers_default_iam_role_extension" {
