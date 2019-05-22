@@ -52,7 +52,7 @@ module "eks_workers_default" {
   ebs_type      = "standard"
 
   # pick the right image from here: https://docs.aws.amazon.com/eks/latest/userguide/eks-optimized-ami.html
-  image_id = "ami-0abcb9f9190e867ab"
+  image_id = "ami-0abcb9f9190e867ab" # strictly dependent on the EKS version
 
   vpc_id     = "${module.network.vpc_id}"
   subnet_ids = "${split(",", module.network.private_subnet_ids)}"
