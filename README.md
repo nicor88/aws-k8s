@@ -63,3 +63,4 @@ kube apply -f plugins/monitoring/ --recursive
 
 ## Notes
 * All the following resources are based on the official AWS Documentation.
+* [K8S cheatsheet](https://kubernetes.io/docs/reference/kubectl/cheatsheet/)

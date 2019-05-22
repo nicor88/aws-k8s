@@ -45,11 +45,11 @@ module "eks_workers_default" {
   eks_cluster_certificate_authority_data = "${module.eks_cluster.cluster_certificate_authority_data}"
   eks_cluster_security_group_id          = "${module.eks_cluster.cluster_eks_sg_id}"
 
-  min_size      = 1
+  min_size      = 2
   max_size      = 4
-  instance_type = "t3.small"
-  ebs_size_gb   = 25
-  ebs_type      = "standard"
+  instance_type = "t3.medium"
+  ebs_size_gb   = 50
+  ebs_type      = "gp2"
 
   # pick the right image from here: https://docs.aws.amazon.com/eks/latest/userguide/eks-optimized-ami.html
   image_id = "ami-0abcb9f9190e867ab" # strictly dependent on the EKS version
@@ -59,9 +59,10 @@ module "eks_workers_default" {
 }
 
 data "aws_iam_policy_document" "workers_default_iam_policy_extension" {
+  # TODO refine this policy, split reads from writey
   statement {
     effect    = "Allow"
-    actions   = ["s3:Get*"]
+    actions   = ["s3:*"]
     resources = ["*"]
   }
 
