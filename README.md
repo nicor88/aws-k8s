@@ -25,13 +25,6 @@ This command will setup:
 * create a kubectl config file
 * apply the node authentication to enable the EC2 machines to join K8S
 
-### Note
-To give access to the new cluster to other user, you can create AWS IAM user then remember to run:
-<pre>
-kubectl apply -f config/user_permission.dist.yml
-</pre>
-Before running the command above, remember to replace `AWS_ACCOUNT_ID` and `AWS_ACCOUNT_ID`
-
 
 ## Deployment with Terraform
 
@@ -58,8 +51,8 @@ Before applying the following yml file to the cluster, be sure to have `kubectl`
 * Run the following command:
 <pre>
 export AWS_PROFILE=your_profile
-aws eks update-kubeconfig --name nicor88-dev-k8s-cluster --kubeconfig ~/.kube/config_nicor88
-export KUBECONFIG=~/.kube/config_nicor88
+aws eks update-kubeconfig --name nicor88-dev-k8s-cluster --kubeconfig ~/.kube/config_nicor88-dev-k8s-cluster
+export KUBECONFIG=~/.kube/config_nicor88-dev-k8s-cluster
 </pre>
 
 ## Plugins
@@ -69,4 +62,4 @@ kube apply -f plugins/monitoring/ --recursive
 </pre>
 
 ## Notes
-All the following resources are based on the official AWS Documentation.
+* All the following resources are based on the official AWS Documentation.
